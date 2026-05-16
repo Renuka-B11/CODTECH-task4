@@ -1,0 +1,71 @@
+# Sentiment Analysis using NLP
+
+# Install libraries
+!pip install nltk scikit-learn pandas
+
+# Import libraries
+import pandas as pd
+import nltk
+import re
+
+from nltk.corpus import stopwords
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+
+# Download stopwords
+nltk.download('stopwords')
+
+# Load dataset
+df = pd.read_csv("sentiment_dataset.csv")
+
+# Show dataset
+print(df.head())
+
+# Text cleaning function
+def clean_text(text):
+    text = re.sub('[^a-zA-Z]', ' ', text)
+    text = text.lower()
+    text = text.split()
+    text = [word for word in text if word not in stopwords.words('english')]
+    text = ' '.join(text)
+    return text
+
+# Apply cleaning
+df['Cleaned_Review'] = df['Review'].apply(clean_text)
+
+# Convert text into numbers
+cv = CountVectorizer()
+
+X = cv.fit_transform(df['Cleaned_Review']).toarray()
+
+# Target column
+y = df['Sentiment']
+
+# Split data
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+
+# Train model
+model = LogisticRegression()
+
+model.fit(X_train, y_train)
+
+# Prediction
+y_pred = model.predict(X_test)
+
+# Accuracy
+accuracy = accuracy_score(y_test, y_pred)
+
+print("Accuracy:", accuracy)
+
+# Test custom sentence
+sample = ["This product is very good"]
+
+sample = cv.transform(sample).toarray()
+
+prediction = model.predict(sample)
+
+print("Prediction:", prediction[0])
